@@ -11,6 +11,8 @@ import { fmtDate, fmtNum } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { generateEan13 } from "@/lib/barcode";
+import { StatCards } from "@/components/StatCards";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -203,7 +205,10 @@ export function CrudPage(props: Props) {
     setOpen(true);
   }
 
-  const tableFields = fields.filter((f) => !f.hideInTable);
+  const allTableFields = fields.filter((f) => !f.hideInTable);
+  const tableFields = allTableFields.slice(0, 5);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [detail, setDetail] = useState<any | null>(null);
 
   // Contextual facets are derived from the field definitions of this view.
   const facetConfigs: FacetConfig[] = (props.facetKeys ?? [])
@@ -220,7 +225,7 @@ export function CrudPage(props: Props) {
 
   const rows = applyFilters(rowsQuery.data ?? [], filters, {
     dateKey: props.dateKey,
-    searchText: (r) => tableFields.map((f) => String(cellValue(f, r, refMaps))).join(" "),
+    searchText: (r) => allTableFields.map((f) => String(cellValue(f, r, refMaps))).join(" "),
   });
 
   const allowCreate = can(me as Me, module, "create");
@@ -239,9 +244,9 @@ export function CrudPage(props: Props) {
               onClick={() =>
                 exportCsv(
                   title,
-                  tableFields.map((f) => ({ key: f.key, label: f.label })),
+                  allTableFields.map((f) => ({ key: f.key, label: f.label })),
                   rows.map((r: Record<string, unknown>) =>
-                    Object.fromEntries(tableFields.map((f) => [f.key, cellValue(f, r, refMaps)])),
+                    Object.fromEntries(allTableFields.map((f) => [f.key, cellValue(f, r, refMaps)])),
                   ),
                 )
               }
@@ -271,6 +276,25 @@ export function CrudPage(props: Props) {
         }
       />
 
+      {(() => {
+        const nums = fields.filter((f) => f.type === "number" && !f.hideInTable).slice(0, 2);
+        const all = rowsQuery.data ?? [];
+        return (
+          <StatCards
+            stats={[
+              { label: t("إجمالي السجلات"), value: all.length },
+              { label: t("النتائج المعروضة"), value: rows.length, tone: "success" as const },
+              ...nums.map((f, i) => ({
+                label: t(f.label) + " — " + t("المجموع"),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                value: fmtNum(rows.reduce((a: number, r: any) => a + (Number(r[f.key]) || 0), 0), f.digits ?? 2),
+                tone: (i ? "warning" : "default") as "warning" | "default",
+              })),
+            ]}
+          />
+        );
+      })()}
+
       <DataFilters
         filters={filters}
         onChange={setFilters}
@@ -281,16 +305,16 @@ export function CrudPage(props: Props) {
 
 
 
-      <div className="print-area overflow-x-auto rounded-lg border bg-card">
+      <div className="print-area mt-3 overflow-x-auto rounded-xl border bg-card shadow-soft">
         <table className="w-full text-sm">
-          <thead className="bg-secondary text-secondary-foreground">
+          <thead className="border-b bg-muted/50 text-xs text-muted-foreground">
             <tr>
               {tableFields.map((f) => (
-                <th key={f.key} className="whitespace-nowrap px-3 py-2 text-start font-semibold">
+                <th key={f.key} className="whitespace-nowrap px-4 py-2.5 text-start font-medium">
                   {t(f.label)}
                 </th>
               ))}
-              <th className="no-print px-3 py-2 text-start font-semibold">{t("إجراءات")}</th>
+              <th className="no-print w-px px-4 py-2.5 text-start font-medium" />
             </tr>
           </thead>
           <tbody>
@@ -310,13 +334,13 @@ export function CrudPage(props: Props) {
             )}
 
             {rows.map((row: Record<string, unknown>) => (
-              <tr key={String(row["id"])} className="border-t hover:bg-muted/40">
+              <tr key={String(row["id"])} onClick={() => setDetail(row)} className="cursor-pointer border-t transition-colors hover:bg-muted/50">
                 {tableFields.map((f) => (
-                  <td key={f.key} className="whitespace-nowrap px-3 py-2">
+                  <td key={f.key} className="whitespace-nowrap px-4 py-3">
                     {cellValue(f, row, refMaps)}
                   </td>
                 ))}
-                <td className="no-print whitespace-nowrap px-3 py-2">
+                <td className="no-print whitespace-nowrap px-4 py-2" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-1">
                     {props.extraRowAction?.(row)}
                     {allowEdit && (
@@ -342,6 +366,46 @@ export function CrudPage(props: Props) {
           </tbody>
         </table>
       </div>
+
+      <Sheet open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+        <SheetContent side={dir === "rtl" ? "left" : "right"} className="w-full overflow-y-auto sm:max-w-md" dir={dir}>
+          <SheetHeader>
+            <SheetTitle className="text-start">{detail ? String(cellValue(fields[0]!, detail, refMaps)) : ""}</SheetTitle>
+            <p className="text-start text-xs text-muted-foreground">{t(title)}</p>
+          </SheetHeader>
+          {detail && (
+            <dl className="mt-6 divide-y rounded-xl border">
+              {fields.filter((f) => !f.hideInForm || !f.hideInTable).map((f) => (
+                <div key={f.key} className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3 px-4 py-2.5 text-sm">
+                  <dt className="text-muted-foreground">{t(f.label)}</dt>
+                  <dd className="break-words font-medium">{cellValue(f, detail, refMaps)}</dd>
+                </div>
+              ))}
+              {detail.created_at && (
+                <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3 px-4 py-2.5 text-sm">
+                  <dt className="text-muted-foreground">{t("تاريخ الإنشاء")}</dt>
+                  <dd className="font-medium">{fmtDate(detail.created_at)}</dd>
+                </div>
+              )}
+            </dl>
+          )}
+          {detail && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              {props.extraRowAction?.(detail)}
+              {allowEdit && (
+                <Button onClick={() => { openEdit(detail); setDetail(null); }}>
+                  <Pencil className="size-4" />{t("تعديل")}
+                </Button>
+              )}
+              {allowDelete && (
+                <Button variant="outline" onClick={() => { setToDelete(String(detail.id)); setDetail(null); }}>
+                  <Trash2 className="size-4 text-destructive" />{t("حذف")}
+                </Button>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg" dir={dir}>
