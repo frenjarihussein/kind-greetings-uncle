@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { enqueue, isNetworkError, loadRefs, newSale, pushSale, readQueue, saveRefs, subscribeQueue, syncQueue } from "@/lib/pos-offline";
 import { toast } from "sonner";
-import { Minus, Plus, Printer, Search, Trash2 } from "lucide-react";
+import { CloudOff, Minus, Plus, Printer, RefreshCw, Search, Trash2 } from "lucide-react";
 import { db, scope } from "@/lib/db";
 import { useMe } from "@/lib/session";
 import { fmtNum, today } from "@/lib/format";
@@ -24,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/pos")({
 });
 
 type Product = { id: string; name: string; sku: string; barcode: string | null; unit: string; category: string | null; last_purchase_price: number; sale_price: number; avg_cost: number; qty_on_hand: number };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Refs = { products: Product[]; warehouses: any[]; partners: any[] };
 type CartLine = { p: Product; qty: number; price: number };
 
 function PosPage() {
@@ -43,13 +46,16 @@ function PosPage() {
   const ref = useQuery({
     queryKey: ["pos_refs", me?.tenantId],
     enabled: !!me?.tenantId,
+    networkMode: "offlineFirst",
     queryFn: async () => {
+      if (!navigator.onLine) { const c = loadRefs<Refs>(me?.tenantId); if (c) return c; }
       const [p, w, pa] = await Promise.all([
         scope(db.from("products").select("id,name,sku,barcode,unit,category,last_purchase_price,sale_price,avg_cost,qty_on_hand,is_group,is_active"), me?.tenantId).order("name"),
         scope(db.from("warehouses").select("id,name,is_group"), me?.tenantId).order("name"),
         scope(db.from("partners").select("id,name,partner_type"), me?.tenantId).order("name"),
       ]);
-      return {
+      if (p.error || w.error || pa.error) { const c = loadRefs<Refs>(me?.tenantId); if (c) return c; throw p.error || w.error || pa.error; }
+      const out: Refs = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         products: ((p.data ?? []) as any[]).filter((x) => !x.is_group && x.is_active !== false) as Product[],
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,6 +63,8 @@ function PosPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         partners: (pa.data ?? []) as any[],
       };
+      saveRefs(me?.tenantId, out);
+      return out;
     },
   });
   const products = ref.data?.products ?? [];
@@ -78,40 +86,56 @@ function PosPage() {
     setCart((c) => (q <= 0 ? c.filter((l) => l.p.id !== id) : c.map((l) => (l.p.id === id ? { ...l, qty: q } : l))));
   }
 
+  const pending = useSyncExternalStore(subscribeQueue, () => readQueue().length, () => 0);
+  const [online, setOnline] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  async function runSync(quiet = false) {
+    if (!navigator.onLine || !readQueue().length) return;
+    setSyncing(true);
+    const r = await syncQueue();
+    setSyncing(false);
+    if (r.sent) { toast.success(`تمت مزامنة ${r.sent} فاتورة`); qc.invalidateQueries({ queryKey: ["pos_refs"] }); }
+    if (r.failed.length && !quiet) toast.error("فواتير لم تُرفع: " + r.failed[0]);
+  }
+  useEffect(() => {
+    setOnline(navigator.onLine);
+    const on = () => { setOnline(true); void runSync(); };
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    void runSync(true);
+    const t = setInterval(() => void runSync(true), 30000);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); clearInterval(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const save = useMutation({
+    networkMode: "always",
     mutationFn: async () => {
       if (!cart.length) throw new Error("السلة فارغة");
       if (!warehouse) throw new Error("لا يوجد مستودع، أضف مستودعاً أولاً");
-      const { data: doc, error } = await db
-        .from("documents")
-        .insert({ tenant_id: me!.tenantId, doc_type: mode, doc_date: today(), currency: "USD", exchange_rate: 1, partner_id: partner || null, warehouse_id: warehouse, amount: 0, notes: mode === "sale" ? "بيع نقطة البيع" : "شراء نقطة البيع" })
-        .select()
-        .single();
-      if (error) throw error;
-      const { error: lErr } = await db.from("document_lines").insert(
-        cart.map((l) => ({ tenant_id: me!.tenantId, document_id: doc.id, product_id: l.p.id, qty: l.qty, unit_price: l.price })),
-      );
-      if (lErr) throw lErr;
-      const { error: pErr } = await db.rpc("post_document", { _id: doc.id });
-      if (pErr) throw new Error("حُفظت الفاتورة كمسودة ولم تُرحّل: " + pErr.message);
-      if (paid) {
-        const { data: v, error: vErr } = await db
-          .from("documents")
-          .insert({ tenant_id: me!.tenantId, doc_type: mode === "sale" ? "receipt" : "payment", doc_date: today(), currency: "USD", exchange_rate: 1, partner_id: partner || null, settles_document_id: doc.id, amount: total, notes: "دفع نقدي - نقطة البيع" })
-          .select()
-          .single();
-        if (vErr) throw vErr;
-        await db.rpc("post_document", { _id: v.id });
+      const sale = newSale({
+        tenantId: me!.tenantId!, mode, partnerId: partner || null, warehouseId: warehouse, paid, total,
+        lines: cart.map((l) => ({ product_id: l.p.id, qty: l.qty, unit_price: l.price })),
+      });
+      if (!navigator.onLine) { enqueue(sale); return { doc_no: null, offline: true }; }
+      try {
+        const doc = await pushSale(sale);
+        return { doc_no: doc.doc_no ?? null, offline: false };
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        enqueue(sale);
+        return { doc_no: null, offline: true };
       }
-      return doc;
     },
     onSuccess: (doc) => {
-      toast.success(`تم حفظ الفاتورة رقم ${doc.doc_no ?? ""}`);
+      if (doc.offline) toast.warning("لا يوجد إنترنت — حُفظت الفاتورة على الجهاز وستُرفع تلقائياً عند عودة الاتصال");
+      else toast.success(`تم حفظ الفاتورة رقم ${doc.doc_no ?? ""}`);
       printThermalReceipt({
         company: me?.tenantName ?? "",
         logoUrl: brand.data?.logo_url ?? null,
         title: mode === "sale" ? "فاتورة مبيع" : "فاتورة شراء",
-        docNo: doc.doc_no,
+        docNo: doc.doc_no ?? "غير متصل",
         cashier: me?.fullName || me?.email || "",
         partner: (ref.data?.partners ?? []).find((p) => p.id === partner)?.name ?? "",
         lines: cart.map((l) => ({ name: l.p.name, qty: l.qty, price: l.price })),
@@ -128,6 +152,20 @@ function PosPage() {
   return (
     <div className="grid h-full gap-3 lg:grid-cols-[1fr_420px]">
       <section className="flex min-h-0 flex-col gap-3">
+        {(!online || pending > 0) && (
+          <div className={cn("flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm", online ? "bg-muted" : "border-destructive/40 bg-destructive/10 text-destructive")}>
+            <span className="flex items-center gap-2">
+              {!online && <CloudOff className="size-4" />}
+              {online ? "متصل" : "وضع بدون إنترنت — البيع مستمر"}
+              {pending > 0 && ` · ${pending} فاتورة بانتظار المزامنة`}
+            </span>
+            {online && pending > 0 && (
+              <Button size="sm" variant="outline" disabled={syncing} onClick={() => void runSync()}>
+                <RefreshCw className={cn("size-4", syncing && "animate-spin")} />مزامنة الآن
+              </Button>
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           {!forced && (
             <div className="flex rounded-xl bg-muted p-1">
