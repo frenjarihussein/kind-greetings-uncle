@@ -25,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/pos")({
 });
 
 type Product = { id: string; name: string; sku: string; barcode: string | null; unit: string; category: string | null; last_purchase_price: number; sale_price: number; avg_cost: number; qty_on_hand: number };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Refs = { products: Product[]; warehouses: any[]; partners: any[] };
 type CartLine = { p: Product; qty: number; price: number };
 
 function PosPage() {
@@ -46,14 +48,14 @@ function PosPage() {
     enabled: !!me?.tenantId,
     networkMode: "offlineFirst",
     queryFn: async () => {
-      if (!navigator.onLine) { const c = loadRefs<any>(me?.tenantId); if (c) return c; }
+      if (!navigator.onLine) { const c = loadRefs<Refs>(me?.tenantId); if (c) return c; }
       const [p, w, pa] = await Promise.all([
         scope(db.from("products").select("id,name,sku,barcode,unit,category,last_purchase_price,sale_price,avg_cost,qty_on_hand,is_group,is_active"), me?.tenantId).order("name"),
         scope(db.from("warehouses").select("id,name,is_group"), me?.tenantId).order("name"),
         scope(db.from("partners").select("id,name,partner_type"), me?.tenantId).order("name"),
       ]);
-      if (p.error || w.error || pa.error) { const c = loadRefs<any>(me?.tenantId); if (c) return c; throw p.error || w.error || pa.error; }
-      const out = {
+      if (p.error || w.error || pa.error) { const c = loadRefs<Refs>(me?.tenantId); if (c) return c; throw p.error || w.error || pa.error; }
+      const out: Refs = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         products: ((p.data ?? []) as any[]).filter((x) => !x.is_group && x.is_active !== false) as Product[],
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
