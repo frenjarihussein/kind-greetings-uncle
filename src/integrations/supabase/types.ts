@@ -1909,6 +1909,27 @@ export type Database = {
           },
         ]
       }
+      user_prefs: {
+        Row: {
+          dashboard: Json | null
+          notif: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          dashboard?: Json | null
+          notif?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          dashboard?: Json | null
+          notif?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       warehouses: {
         Row: {
           code: string | null

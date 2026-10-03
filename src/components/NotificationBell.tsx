@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Bell, Settings2 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Bell, CheckCheck, Circle, Settings2 } from "lucide-react";
 import { usePrefs } from "@/lib/prefs";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,9 +10,21 @@ import { useMe } from "@/lib/session";
 import { fmtDateTime } from "@/lib/format";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
+/** Where a notification goes when clicked: its own link, else a page matching its kind. */
+const KIND_LINK: Record<string, string> = {
+  invoice_created: "/documents",
+  document_posted: "/documents",
+  entry_audited: "/journal",
+  cheque_added: "/cheques",
+  low_stock: "/products",
+  payroll_posted: "/payroll",
+};
+
 export function NotificationBell({ className }: { className?: string }) {
   const { data: me } = useMe();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const q = useQuery({
     queryKey: ["notifications", me?.userId],
     enabled: !!me,
@@ -19,24 +32,40 @@ export function NotificationBell({ className }: { className?: string }) {
     queryFn: async () =>
       (await db.from("notifications").select("*").order("created_at", { ascending: false }).limit(30)).data ?? [],
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reads = useQuery({
+    queryKey: ["notification_reads", me?.userId],
+    enabled: !!me,
+    queryFn: async () =>
+      new Set<string>(((await db.from("notification_reads").select("notification_id")).data ?? []).map((r: { notification_id: string }) => r.notification_id)),
+  });
   const prefs = usePrefs(me);
   const [cfg, setCfg] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const list: any[] = (q.data ?? []).filter((n: any) => prefs.data?.notif[n.kind ?? "announcement"] !== false);
-  const seen = me?.notifSeenAt ? new Date(me.notifSeenAt).getTime() : 0;
-  const unread = list.filter((n) => new Date(n.created_at).getTime() > seen).length;
+  const readSet = reads.data ?? new Set<string>();
+  const isRead = (id: string) => readSet.has(id);
+  const unread = list.filter((n) => !isRead(n.id)).length;
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ["notification_reads"] });
+  async function setRead(ids: string[], read: boolean) {
+    if (!ids.length) return;
+    if (read) await db.from("notification_reads").upsert(ids.map((id) => ({ user_id: me!.userId, notification_id: id })), { onConflict: "user_id,notification_id" });
+    else await db.from("notification_reads").delete().in("notification_id", ids).eq("user_id", me!.userId);
+    refresh();
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function openItem(n: any) {
+    if (!isRead(n.id)) await setRead([n.id], true);
+    const to = n.link || KIND_LINK[n.kind];
+    if (to) {
+      setOpen(false);
+      navigate({ to });
+    }
+  }
 
   return (
     <>
-    <Popover
-      onOpenChange={async (open) => {
-        if (!open && unread > 0) {
-          await db.rpc("mark_notifications_seen");
-          qc.invalidateQueries({ queryKey: ["me"] });
-        }
-      }}
-    >
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className={`relative rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground ${className ?? ""}`} aria-label="الإشعارات">
           <Bell className="size-[18px]" />
@@ -47,24 +76,40 @@ export function NotificationBell({ className }: { className?: string }) {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="max-h-96 w-80 overflow-y-auto p-0">
-        <div className="flex items-center justify-between border-b px-3 py-2 text-sm font-semibold">
+      <PopoverContent align="end" className="max-h-[28rem] w-96 overflow-y-auto p-0">
+        <div className="flex items-center justify-between gap-2 border-b px-3 py-2 text-sm font-semibold">
           الإشعارات
-          <button onClick={() => setCfg(true)} className="flex items-center gap-1 text-xs font-normal text-primary">
-            <Settings2 className="size-4" />تخصيص
-          </button>
+          <div className="flex items-center gap-3">
+            {unread > 0 && (
+              <button onClick={() => setRead(list.filter((n) => !isRead(n.id)).map((n) => n.id), true)} className="flex items-center gap-1 text-xs font-normal text-primary">
+                <CheckCheck className="size-4" />تعليم الكل كمقروء
+              </button>
+            )}
+            <button onClick={() => setCfg(true)} className="flex items-center gap-1 text-xs font-normal text-primary">
+              <Settings2 className="size-4" />تخصيص
+            </button>
+          </div>
         </div>
         {list.length === 0 && <p className="p-4 text-center text-sm text-muted-foreground">لا توجد إشعارات</p>}
-        {list.map((n) => (
-          <div
-            key={n.id}
-            className={`border-b px-3 py-2 text-sm ${new Date(n.created_at).getTime() > seen ? "bg-accent/40" : ""}`}
-          >
-            <div className="font-semibold">{n.title}</div>
-            {n.body && <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{n.body}</p>}
-            <div className="mt-1 text-[11px] text-muted-foreground">{fmtDateTime(n.created_at)}</div>
-          </div>
-        ))}
+        {list.map((n) => {
+          const read = isRead(n.id);
+          return (
+            <div key={n.id} className={`group flex gap-2 border-b px-3 py-2 text-sm ${read ? "" : "bg-accent/40"}`}>
+              <button className="flex-1 text-start" onClick={() => openItem(n)}>
+                <div className={read ? "font-normal" : "font-semibold"}>{n.title}</div>
+                {n.body && <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{n.body}</p>}
+                <div className="mt-1 text-[11px] text-muted-foreground">{fmtDateTime(n.created_at)}</div>
+              </button>
+              <button
+                title={read ? "تعليم كغير مقروء" : "تعليم كمقروء"}
+                onClick={() => setRead([n.id], !read)}
+                className="self-start rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <Circle className={`size-3 ${read ? "" : "fill-primary text-primary"}`} />
+              </button>
+            </div>
+          );
+        })}
       </PopoverContent>
     </Popover>
     <Dialog open={cfg} onOpenChange={setCfg}>
