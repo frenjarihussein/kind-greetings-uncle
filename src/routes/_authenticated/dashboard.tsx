@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Settings2 } from "lucide-react";
-import { NAV } from "@/components/AppShell";
 import { usePrefs, useSavePrefs } from "@/lib/prefs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +10,9 @@ import { db, scope } from "@/lib/db";
 import { moduleEnabled, useMe } from "@/lib/session";
 import { fmtNum } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
+import { NAV, QUICK_ACTIONS } from "@/components/AppShell";
+import { Sparkline } from "@/components/StatCards";
+import { ArrowUpLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "لوحة التحكم" }, { name: "description", content: "مؤشرات مالية وتنبيهات المخزون" }] }),
@@ -30,17 +32,26 @@ function Dashboard() {
         scope(db.from("products").select("id, name, unit, qty_on_hand, avg_cost, reorder_level"), me?.tenantId),
         scope(db.from("projects").select("id, contract_value, completion_pct"), me?.tenantId),
         scope(db.from("cheques").select("id, amount, status, direction"), me?.tenantId),
-        scope(db.from("journal_lines").select("debit, credit, accounts(nature), journal_entries(exchange_rate)"), me?.tenantId),
+        scope(db.from("journal_lines").select("debit, credit, accounts(nature), journal_entries(exchange_rate, entry_date)"), me?.tenantId),
       ]);
 
       let revenue = 0;
       let expense = 0;
+      const days = 14;
+      const keys = Array.from({ length: days }, (_, i) => new Date(Date.now() - (days - 1 - i) * 864e5).toISOString().slice(0, 10));
+      const rev: Record<string, number> = {};
+      const exp: Record<string, number> = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (lines.data ?? []).forEach((l: any) => {
         if (l.accounts?.nature !== "profit_loss") return;
         const rate = Number(l.journal_entries?.exchange_rate ?? 1) || 1;
         revenue += Number(l.credit) / rate;
         expense += Number(l.debit) / rate;
+        const d = l.journal_entries?.entry_date as string | undefined;
+        if (d) {
+          rev[d] = (rev[d] ?? 0) + Number(l.credit) / rate;
+          exp[d] = (exp[d] ?? 0) + Number(l.debit) / rate;
+        }
       });
 
       const stockValue = (products.data ?? []).reduce(
@@ -70,6 +81,9 @@ function Dashboard() {
         projects: projects.data?.length ?? 0,
         revenue,
         expense,
+        revSeries: keys.map((k) => rev[k] ?? 0),
+        expSeries: keys.map((k) => exp[k] ?? 0),
+        netSeries: keys.map((k) => (rev[k] ?? 0) - (exp[k] ?? 0)),
         profit: revenue - expense,
         stockValue,
         lowStock,
@@ -117,10 +131,39 @@ function Dashboard() {
         <PageHeader title={`أهلاً ${me?.fullName ?? ""}`} subtitle="اختصاراتك ومؤشراتك المختارة" />
         <Button variant="outline" onClick={() => setEdit(true)}><Settings2 className="size-4" />تخصيص الواجهة</Button>
       </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {QUICK_ACTIONS.filter((a) => moduleEnabled(me, a.module)).map((a) => (
+          <Link key={a.label} to={a.to} className="group relative flex flex-col gap-6 rounded-2xl border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-pop">
+            <span className="grid size-11 place-items-center rounded-xl bg-muted text-foreground transition group-hover:bg-primary group-hover:text-primary-foreground"><a.icon className="size-5" /></span>
+            <span>
+              <span className="block text-base font-semibold">{a.label}</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">{a.desc}</span>
+            </span>
+            <ArrowUpLeft className="absolute end-4 top-4 size-4 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
+          </Link>
+        ))}
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        {[
+          { label: "الإيرادات ($)", value: s?.revenue, series: s?.revSeries, cls: "text-success" },
+          { label: "المصاريف ($)", value: s?.expense, series: s?.expSeries, cls: "text-destructive" },
+          { label: "صافي التدفق ($)", value: s?.profit, series: s?.netSeries, cls: "text-highlight" },
+        ].map((k) => (
+          <div key={k.label} className="rounded-2xl border bg-card p-5 shadow-soft">
+            <div className="flex items-baseline justify-between">
+              <p className="text-xs font-medium text-muted-foreground">{k.label}</p>
+              <p className="text-[11px] text-muted-foreground">آخر 14 يوماً</p>
+            </div>
+            <p className="num mt-1 text-2xl font-semibold tracking-tight">{fmtNum(k.value)}</p>
+            <Sparkline data={k.series ?? []} className={"mt-3 " + k.cls} />
+          </div>
+        ))}
+      </div>
+      {shownLinks.length > 0 && <h2 className="mb-3 mt-8 text-sm font-semibold text-muted-foreground">اختصاراتك</h2>}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {shownLinks.map((l) => (
-          <Link key={l.to} to={l.to} className="flex flex-col items-center gap-2 rounded-xl border bg-card p-5 text-center text-sm font-semibold transition hover:border-primary hover:bg-accent">
-            <l.icon className="size-7 text-primary" />
+          <Link key={l.to} to={l.to} className="flex items-center gap-2.5 rounded-xl border bg-card px-3.5 py-3 text-sm font-medium shadow-xs transition hover:border-foreground/15 hover:bg-accent">
+            <l.icon className="size-4 shrink-0 text-muted-foreground" />
             {l.label}
           </Link>
         ))}
@@ -128,7 +171,7 @@ function Dashboard() {
       {shownCards.length > 0 && (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {shownCards.map((c) => (
-            <div key={c.key} className="rounded-lg border bg-card p-5">
+            <div key={c.key} className="rounded-xl border bg-card p-4 shadow-soft">
               <p className="text-sm text-muted-foreground">{c.label}</p>
               <p className="num mt-2 text-2xl font-bold">{c.value}</p>
             </div>
@@ -136,10 +179,10 @@ function Dashboard() {
         </div>
       )}
       {chosen.has("lowItems") && !!s?.lowItems.length && (
-        <div className="mt-6 rounded-lg border border-destructive/40 bg-card p-5">
-          <h2 className="mb-3 font-bold text-destructive">تنبيه: مواد وصلت أو تقترب من حد إعادة الطلب</h2>
+        <div className="mt-6 rounded-xl border bg-card p-5 shadow-soft">
+          <h2 className="mb-3 text-sm font-semibold">تنبيه: مواد وصلت أو تقترب من حد إعادة الطلب</h2>
           <table className="w-full text-sm">
-            <thead className="bg-secondary"><tr><th className="p-2 text-right">المادة</th><th className="p-2 text-right">الرصيد</th><th className="p-2 text-right">حد الطلب</th><th className="p-2 text-right">الحالة</th></tr></thead>
+            <thead className="text-xs text-muted-foreground"><tr><th className="p-2 text-right">المادة</th><th className="p-2 text-right">الرصيد</th><th className="p-2 text-right">حد الطلب</th><th className="p-2 text-right">الحالة</th></tr></thead>
             <tbody>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {s.lowItems.slice(0, 8).map((p: any) => {

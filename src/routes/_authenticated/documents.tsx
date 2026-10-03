@@ -380,7 +380,7 @@ function DocumentsPage() {
                 </td>
                 <td className="px-3 py-2 text-center">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-xs ${d.status === "posted" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${d.status === "posted" ? "bg-status-posted text-status-posted-foreground" : "bg-status-draft text-status-draft-foreground"}`}
                   >
                     {d.status === "posted" ? "مرحّل" : "مسودة"}
                   </span>

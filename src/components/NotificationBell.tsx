@@ -38,16 +38,16 @@ export function NotificationBell({ className }: { className?: string }) {
       }}
     >
       <PopoverTrigger asChild>
-        <button className={`relative rounded-md p-2 hover:bg-sidebar-accent ${className ?? ""}`} aria-label="الإشعارات">
-          <Bell className="size-5" />
+        <button className={`relative rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground ${className ?? ""}`} aria-label="الإشعارات">
+          <Bell className="size-[18px]" />
           {unread > 0 && (
-            <span className="absolute -top-0.5 -left-0.5 flex size-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+            <span className="absolute top-0.5 end-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
               {unread}
             </span>
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="max-h-96 w-80 overflow-y-auto p-0">
+      <PopoverContent align="end" className="max-h-96 w-80 overflow-y-auto p-0">
         <div className="flex items-center justify-between border-b px-3 py-2 text-sm font-semibold">
           الإشعارات
           <button onClick={() => setCfg(true)} className="flex items-center gap-1 text-xs font-normal text-primary">

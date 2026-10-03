@@ -126,13 +126,13 @@ function PosPage() {
   const partnersList = (ref.data?.partners ?? []).filter((p) => (mode === "sale" ? p.partner_type !== "supplier" : p.partner_type !== "customer"));
 
   return (
-    <div className="grid h-[calc(100vh-5rem)] gap-3 lg:grid-cols-[1fr_400px]">
+    <div className="grid h-full gap-3 lg:grid-cols-[1fr_420px]">
       <section className="flex min-h-0 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {!forced && (
-            <div className="flex rounded-lg border p-1">
+            <div className="flex rounded-xl bg-muted p-1">
               {(["sale", "purchase"] as const).map((m) => (
-                <button key={m} onClick={() => { setMode(m); setCart([]); }} className={cn("rounded-md px-5 py-2 text-base", mode === m && "bg-primary text-primary-foreground")}>
+                <button key={m} onClick={() => { setMode(m); setCart([]); }} className={cn("rounded-lg px-6 py-2.5 text-base font-medium text-muted-foreground", mode === m && "bg-card text-foreground shadow-soft")}>
                   {m === "sale" ? "بيع" : "شراء"}
                 </button>
               ))}
@@ -151,7 +151,7 @@ function PosPage() {
         {cats.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
             {["", ...cats].map((c) => (
-              <button key={c || "all"} onClick={() => setCat(c)} className={cn("whitespace-nowrap rounded-full border px-5 py-2 text-base", cat === c && "bg-primary text-primary-foreground")}>
+              <button key={c || "all"} onClick={() => setCat(c)} className={cn("whitespace-nowrap rounded-full border bg-card px-5 py-2.5 text-base transition", cat === c && "bg-primary text-primary-foreground")}>
                 {c || "الكل"}
               </button>
             ))}
@@ -159,8 +159,8 @@ function PosPage() {
         )}
         <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 xl:grid-cols-4">
           {shown.map((p) => (
-            <button key={p.id} onClick={() => add(p)} className="flex min-h-28 flex-col justify-between rounded-xl border bg-card p-4 text-start shadow-sm transition active:scale-95 hover:border-primary">
-              <span className="text-base font-semibold leading-tight">{p.name}</span>
+            <button key={p.id} onClick={() => add(p)} className="flex min-h-32 flex-col justify-between rounded-2xl border bg-card p-4 text-start shadow-soft transition active:scale-[0.97] hover:border-foreground/20">
+              <span className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-lg font-semibold text-muted-foreground">{p.name.slice(0, 1)}</span><span className="text-base font-semibold leading-tight">{p.name}</span></span>
               <span className="mt-2 flex items-end justify-between text-sm text-muted-foreground">
                 <span>{fmtNum(p.qty_on_hand, 0)} {p.unit}</span>
                 <span className="num text-lg font-bold text-foreground">{fmtNum(mode === "sale" ? Number(p.sale_price) || p.last_purchase_price : p.avg_cost)}</span>
@@ -171,7 +171,7 @@ function PosPage() {
         </div>
       </section>
 
-      <aside className="flex min-h-0 flex-col rounded-xl border bg-card">
+      <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-card shadow-soft">
         <div className="grid grid-cols-2 gap-2 border-b p-3">
           <select className="h-12 rounded-md border bg-background px-2 text-base" value={warehouse} onChange={(e) => setWh(e.target.value)}>
             {(ref.data?.warehouses ?? []).map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -196,20 +196,20 @@ function PosPage() {
             </div>
           ))}
         </div>
-        <div className="space-y-3 border-t p-3">
+        <div className="space-y-3 border-t bg-muted/40 p-4">
           <label className="flex items-center gap-2 text-base">
             <input type="checkbox" className="size-5" checked={paid} onChange={(e) => setPaid(e.target.checked)} />
             مدفوعة نقداً
           </label>
           <div className="flex items-baseline justify-between">
             <span className="text-lg">الإجمالي</span>
-            <span className="num text-3xl font-bold">{fmtNum(total)}</span>
+            <span className="num text-4xl font-semibold tracking-tight">{fmtNum(total)}</span>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="h-14 flex-1 text-base" onClick={() => setCart([])} disabled={!cart.length}>إلغاء</Button>
             <Button className="h-14 flex-[2] text-lg" onClick={() => save.mutate()} disabled={!cart.length || save.isPending}>
               <Printer className="size-5" />
-              {save.isPending ? "جارٍ الحفظ..." : "حفظ الفاتورة"}
+              {save.isPending ? "جارٍ الحفظ..." : `دفع ${fmtNum(total)} وطباعة`}
             </Button>
           </div>
         </div>
