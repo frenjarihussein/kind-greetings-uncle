@@ -5,18 +5,27 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
 
-function renderAt(path: string) {
+async function renderAt(path: string) {
   const queryClient = new QueryClient();
   const router = createRouter({
     routeTree,
     context: { queryClient },
     history: createMemoryHistory({ initialEntries: [path] }),
   });
-  return render(<RouterProvider router={router} />);
+  // RouterProvider paints nothing until the router load resolves; in jsdom the
+  // implicit effect-driven load never settles, so load explicitly.
+  await router.load();
+  // The root shell renders a full <html> document, which jsdom only accepts
+  // when mounted into the document body itself.
+  return render(<RouterProvider router={router} />, {
+    container: document.body,
+    baseElement: document.body,
+  });
 }
 
 afterEach(() => {
   cleanup();
+  document.body.innerHTML = "";
   vi.restoreAllMocks();
 });
 
@@ -24,16 +33,16 @@ afterEach(() => {
 // routes are rewritten as the app is built and this must keep passing.
 describe("App routing", () => {
   it("renders the index route", async () => {
-    const { container } = renderAt("/");
+    renderAt("/");
 
-    await waitFor(() => expect(container.firstChild).not.toBeNull());
+    await waitFor(() => expect(document.body.querySelector("h1")).not.toBeNull());
   });
 
   it("renders the not-found route", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
-    const { container } = renderAt("/this-route-does-not-exist");
+    renderAt("/this-route-does-not-exist");
 
-    await waitFor(() => expect(container.firstChild).not.toBeNull());
+    await waitFor(() => expect(document.body.querySelector("h1")).not.toBeNull());
   });
 });
