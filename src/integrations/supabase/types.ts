@@ -29,17 +29,17 @@ export type Database = {
           is_active: boolean
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           code: string
           name: string
-          parent_id[]: string | null
-          nature[]: Database['public']['Enums']['account_nature']
-          currency[]: Database['public']['Enums']['currency_code']
-          is_group[]: boolean
-          notes[]: string | null
-          created_at[]: string
-          is_active[]: boolean
+          parent_id?: string | null
+          nature?: Database['public']['Enums']['account_nature']
+          currency?: Database['public']['Enums']['currency_code']
+          is_group?: boolean
+          notes?: string | null
+          created_at?: string
+          is_active?: boolean
         }
         Update: {
           id?: string | null
@@ -56,14 +56,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "19965"
+            foreignKeyName: "accounts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "19970"
+            foreignKeyName: "accounts_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "accounts"
@@ -87,18 +87,18 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           entity_type: string
           entity_id: string
-          attach_type[]: string
+          attach_type?: string
           file_path: string
           file_name: string
-          mime_type[]: string | null
-          size_bytes[]: number | null
-          notes[]: string | null
-          created_by[]: string | null
-          created_at[]: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          notes?: string | null
+          created_by?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -116,7 +116,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20822"
+            foreignKeyName: "attachments_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -137,15 +137,15 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: number
-          tenant_id[]: string | null
-          user_id[]: string | null
+          id?: number
+          tenant_id?: string | null
+          user_id?: string | null
           table_name: string
-          record_id[]: string | null
+          record_id?: string | null
           action: string
-          old_data[]: Json | null
-          new_data[]: Json | null
-          created_at[]: string
+          old_data?: Json | null
+          new_data?: Json | null
+          created_at?: string
         }
         Update: {
           id?: number | null
@@ -173,14 +173,14 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           name: string
-          branch[]: string | null
-          account_no[]: string | null
-          currency[]: Database['public']['Enums']['currency_code']
-          account_id[]: string | null
-          created_at[]: string
+          branch?: string | null
+          account_no?: string | null
+          currency?: Database['public']['Enums']['currency_code']
+          account_id?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -194,14 +194,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20084"
+            foreignKeyName: "banks_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20089"
+            foreignKeyName: "banks_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
@@ -221,14 +221,14 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           project_id: string
           item_name: string
-          unit[]: string | null
-          qty[]: Json
-          unit_price[]: Json
-          created_at[]: string
+          unit?: string | null
+          qty?: Json
+          unit_price?: Json
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -242,14 +242,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20317"
+            foreignKeyName: "boq_items_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20322"
+            foreignKeyName: "boq_items_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -274,19 +274,19 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           cheque_no: string
-          direction[]: string
-          bank_id[]: string | null
-          partner_id[]: string | null
+          direction?: string
+          bank_id?: string | null
+          partner_id?: string | null
           amount: Json
-          currency[]: Database['public']['Enums']['currency_code']
-          issue_date[]: string
-          due_date[]: string
-          status[]: string
-          notes[]: string | null
-          created_at[]: string
+          currency?: Database['public']['Enums']['currency_code']
+          issue_date?: string
+          due_date?: string
+          status?: string
+          notes?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -305,21 +305,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20111"
+            foreignKeyName: "cheques_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20116"
+            foreignKeyName: "cheques_bank_id_fkey"
             columns: ["bank_id"]
             isOneToOne: false
             referencedRelation: "banks"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20121"
+            foreignKeyName: "cheques_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
@@ -337,12 +337,12 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           code: string
           name: string
-          symbol[]: string | null
-          created_at[]: string
+          symbol?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -354,7 +354,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20778"
+            foreignKeyName: "currencies_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -373,13 +373,13 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           document_id: string
           product_id: string
           qty: number
-          unit_price[]: number
-          created_at[]: string
+          unit_price?: number
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -392,21 +392,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20563"
+            foreignKeyName: "document_lines_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20568"
+            foreignKeyName: "document_lines_document_id_fkey"
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "documents"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20573"
+            foreignKeyName: "document_lines_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -437,25 +437,25 @@ export type Database = {
           settles_document_id: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           doc_type: string
-          doc_no[]: number | null
-          doc_date[]: string
-          currency[]: Database['public']['Enums']['currency_code']
-          exchange_rate[]: number
-          partner_id[]: string | null
-          warehouse_id[]: string | null
-          to_warehouse_id[]: string | null
-          project_id[]: string | null
-          account_id[]: string | null
-          amount[]: number
-          notes[]: string | null
-          status[]: string
-          journal_entry_id[]: string | null
-          created_by[]: string | null
-          created_at[]: string
-          settles_document_id[]: string | null
+          doc_no?: number | null
+          doc_date?: string
+          currency?: Database['public']['Enums']['currency_code']
+          exchange_rate?: number
+          partner_id?: string | null
+          warehouse_id?: string | null
+          to_warehouse_id?: string | null
+          project_id?: string | null
+          account_id?: string | null
+          amount?: number
+          notes?: string | null
+          status?: string
+          journal_entry_id?: string | null
+          created_by?: string | null
+          created_at?: string
+          settles_document_id?: string | null
         }
         Update: {
           id?: string | null
@@ -480,56 +480,56 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20516"
+            foreignKeyName: "documents_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20521"
+            foreignKeyName: "documents_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20526"
+            foreignKeyName: "documents_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20531"
+            foreignKeyName: "documents_to_warehouse_id_fkey"
             columns: ["to_warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20536"
+            foreignKeyName: "documents_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20541"
+            foreignKeyName: "documents_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20546"
+            foreignKeyName: "documents_journal_entry_id_fkey"
             columns: ["journal_entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20708"
+            foreignKeyName: "documents_settles_document_id_fkey"
             columns: ["settles_document_id"]
             isOneToOne: false
             referencedRelation: "documents"
@@ -550,15 +550,15 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           employee_id: string
-          adv_date[]: string
-          amount[]: number
-          deducted[]: boolean
-          payroll_month[]: string | null
-          notes[]: string | null
-          created_at[]: string
+          adv_date?: string
+          amount?: number
+          deducted?: boolean
+          payroll_month?: string | null
+          notes?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -573,14 +573,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20937"
+            foreignKeyName: "employee_advances_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20942"
+            foreignKeyName: "employee_advances_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
@@ -605,19 +605,19 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
-          code[]: string | null
+          code?: string | null
           name: string
-          job_title[]: string | null
-          phone[]: string | null
-          hire_date[]: string | null
-          base_salary[]: number
-          allowances[]: number
-          currency[]: string
-          is_active[]: boolean
-          notes[]: string | null
-          created_at[]: string
+          job_title?: string | null
+          phone?: string | null
+          hire_date?: string | null
+          base_salary?: number
+          allowances?: number
+          currency?: string
+          is_active?: boolean
+          notes?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -636,7 +636,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20920"
+            foreignKeyName: "employees_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -653,10 +653,10 @@ export type Database = {
           rate_to_usd: Json
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
-          rate_date[]: string
-          currency[]: Database['public']['Enums']['currency_code']
+          rate_date?: string
+          currency?: Database['public']['Enums']['currency_code']
           rate_to_usd: Json
         }
         Update: {
@@ -668,7 +668,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "19986"
+            foreignKeyName: "exchange_rates_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -692,18 +692,18 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
-          code[]: string | null
+          code?: string | null
           name: string
-          purchase_date[]: string
+          purchase_date?: string
           cost: Json
-          salvage_value[]: Json
-          useful_life_years[]: number
-          currency[]: Database['public']['Enums']['currency_code']
-          account_id[]: string | null
-          notes[]: string | null
-          created_at[]: string
+          salvage_value?: Json
+          useful_life_years?: number
+          currency?: Database['public']['Enums']['currency_code']
+          account_id?: string | null
+          notes?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -721,14 +721,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20144"
+            foreignKeyName: "fixed_assets_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20149"
+            foreignKeyName: "fixed_assets_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
@@ -754,20 +754,20 @@ export type Database = {
           audited_by: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           entry_no: number
-          entry_date[]: string
-          description[]: string | null
-          currency[]: Database['public']['Enums']['currency_code']
-          exchange_rate[]: Json
-          doc_type[]: string
-          created_by[]: string | null
-          created_at[]: string
-          document_id[]: string | null
-          audited[]: boolean
-          audited_at[]: string | null
-          audited_by[]: string | null
+          entry_date?: string
+          description?: string | null
+          currency?: Database['public']['Enums']['currency_code']
+          exchange_rate?: Json
+          doc_type?: string
+          created_by?: string | null
+          created_at?: string
+          document_id?: string | null
+          audited?: boolean
+          audited_at?: string | null
+          audited_by?: string | null
         }
         Update: {
           id?: string | null
@@ -787,14 +787,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20591"
+            foreignKeyName: "journal_entries_document_id_fkey"
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "documents"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20030"
+            foreignKeyName: "journal_entries_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -815,15 +815,15 @@ export type Database = {
           credit: Json
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           entry_id: string
           account_id: string
-          partner_id[]: string | null
-          project_id[]: string | null
-          description[]: string | null
-          debit[]: Json
-          credit[]: Json
+          partner_id?: string | null
+          project_id?: string | null
+          description?: string | null
+          debit?: Json
+          credit?: Json
         }
         Update: {
           id?: string | null
@@ -838,35 +838,35 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20415"
+            foreignKeyName: "journal_lines_project_fk"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20048"
+            foreignKeyName: "journal_lines_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20053"
+            foreignKeyName: "journal_lines_entry_id_fkey"
             columns: ["entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20058"
+            foreignKeyName: "journal_lines_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20063"
+            foreignKeyName: "journal_lines_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
@@ -884,12 +884,12 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
-          tenant_id[]: string | null
+          id?: string
+          tenant_id?: string | null
           title: string
-          body[]: string | null
-          created_by[]: string | null
-          created_at[]: string
+          body?: string | null
+          created_by?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -901,7 +901,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20759"
+            foreignKeyName: "notifications_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -923,16 +923,16 @@ export type Database = {
           is_active: boolean
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
-          code[]: string | null
+          code?: string | null
           name: string
-          partner_type[]: string
-          phone[]: string | null
-          address[]: string | null
-          account_id[]: string | null
-          created_at[]: string
-          is_active[]: boolean
+          partner_type?: string
+          phone?: string | null
+          address?: string | null
+          account_id?: string | null
+          created_at?: string
+          is_active?: boolean
         }
         Update: {
           id?: string | null
@@ -948,14 +948,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20004"
+            foreignKeyName: "partners_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20009"
+            foreignKeyName: "partners_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
@@ -976,15 +976,15 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           month: string
-          total_gross[]: number
-          total_advances[]: number
-          total_net[]: number
-          journal_entry_id[]: string | null
-          details[]: Json | null
-          created_at[]: string
+          total_gross?: number
+          total_advances?: number
+          total_net?: number
+          journal_entry_id?: string | null
+          details?: Json | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -999,14 +999,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20961"
+            foreignKeyName: "payroll_runs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20966"
+            foreignKeyName: "payroll_runs_journal_entry_id_fkey"
             columns: ["journal_entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
@@ -1035,23 +1035,23 @@ export type Database = {
           is_group: boolean
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           sku: string
-          barcode[]: string | null
+          barcode?: string | null
           name: string
-          unit[]: string
-          category[]: string | null
-          reorder_level[]: Json
-          default_warehouse_id[]: string | null
-          last_purchase_price[]: Json
-          avg_cost[]: Json
-          qty_on_hand[]: Json
-          currency[]: Database['public']['Enums']['currency_code']
-          created_at[]: string
-          is_active[]: boolean
-          parent_id[]: string | null
-          is_group[]: boolean
+          unit?: string
+          category?: string | null
+          reorder_level?: Json
+          default_warehouse_id?: string | null
+          last_purchase_price?: Json
+          avg_cost?: Json
+          qty_on_hand?: Json
+          currency?: Database['public']['Enums']['currency_code']
+          created_at?: string
+          is_active?: boolean
+          parent_id?: string | null
+          is_group?: boolean
         }
         Update: {
           id?: string | null
@@ -1074,21 +1074,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20229"
+            foreignKeyName: "products_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20234"
+            foreignKeyName: "products_default_warehouse_id_fkey"
             columns: ["default_warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20861"
+            foreignKeyName: "products_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -1111,15 +1111,15 @@ export type Database = {
         }
         Insert: {
           id: string
-          tenant_id[]: string | null
-          full_name[]: string
-          email[]: string | null
-          is_super_admin[]: boolean
-          is_active[]: boolean
-          created_at[]: string
-          is_tenant_admin[]: boolean
-          is_auditor[]: boolean
-          notif_seen_at[]: string
+          tenant_id?: string | null
+          full_name?: string
+          email?: string | null
+          is_super_admin?: boolean
+          is_active?: boolean
+          created_at?: string
+          is_tenant_admin?: boolean
+          is_auditor?: boolean
+          notif_seen_at?: string
         }
         Update: {
           id?: string | null
@@ -1135,7 +1135,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "19886"
+            foreignKeyName: "profiles_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1156,15 +1156,15 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           project_id: string
-          expense_date[]: string
+          expense_date?: string
           description: string
           amount: Json
-          currency[]: Database['public']['Enums']['currency_code']
-          account_id[]: string | null
-          created_at[]: string
+          currency?: Database['public']['Enums']['currency_code']
+          account_id?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -1179,21 +1179,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20339"
+            foreignKeyName: "project_expenses_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20344"
+            foreignKeyName: "project_expenses_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20349"
+            foreignKeyName: "project_expenses_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
@@ -1214,15 +1214,15 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           project_id: string
           name: string
-          due_date[]: string | null
-          amount[]: Json
-          is_done[]: boolean
-          invoiced[]: boolean
-          created_at[]: string
+          due_date?: string | null
+          amount?: Json
+          is_done?: boolean
+          invoiced?: boolean
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -1237,14 +1237,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20366"
+            foreignKeyName: "project_milestones_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20371"
+            foreignKeyName: "project_milestones_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -1272,22 +1272,22 @@ export type Database = {
           is_group: boolean
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
-          code[]: string | null
+          code?: string | null
           name: string
-          client_id[]: string | null
-          contract_value[]: Json
-          currency[]: Database['public']['Enums']['currency_code']
-          start_date[]: string | null
-          end_date[]: string | null
-          completion_pct[]: Json
-          status[]: string
-          notes[]: string | null
-          created_at[]: string
-          is_active[]: boolean
-          parent_id[]: string | null
-          is_group[]: boolean
+          client_id?: string | null
+          contract_value?: Json
+          currency?: Database['public']['Enums']['currency_code']
+          start_date?: string | null
+          end_date?: string | null
+          completion_pct?: Json
+          status?: string
+          notes?: string | null
+          created_at?: string
+          is_active?: boolean
+          parent_id?: string | null
+          is_group?: boolean
         }
         Update: {
           id?: string | null
@@ -1309,21 +1309,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20256"
+            foreignKeyName: "projects_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20261"
+            foreignKeyName: "projects_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "partners"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20867"
+            foreignKeyName: "projects_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -1348,19 +1348,19 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           name: string
-          description[]: string | null
-          currency[]: string
+          description?: string | null
+          currency?: string
           debit_account_id: string
           credit_account_id: string
-          amount[]: number
-          frequency[]: string
-          next_date[]: string
-          end_date[]: string | null
-          is_active[]: boolean
-          created_at[]: string
+          amount?: number
+          frequency?: string
+          next_date?: string
+          end_date?: string | null
+          is_active?: boolean
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -1379,21 +1379,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20892"
+            foreignKeyName: "recurring_entries_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20897"
+            foreignKeyName: "recurring_entries_debit_account_id_fkey"
             columns: ["debit_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20902"
+            foreignKeyName: "recurring_entries_credit_account_id_fkey"
             columns: ["credit_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
@@ -1418,19 +1418,19 @@ export type Database = {
           document_id: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           product_id: string
           warehouse_id: string
-          move_date[]: string
+          move_date?: string
           direction: string
           qty: Json
-          unit_cost[]: Json
-          project_id[]: string | null
-          partner_id[]: string | null
-          reference[]: string | null
-          created_at[]: string
-          document_id[]: string | null
+          unit_cost?: Json
+          project_id?: string | null
+          partner_id?: string | null
+          reference?: string | null
+          created_at?: string
+          document_id?: string | null
         }
         Update: {
           id?: string | null
@@ -1449,42 +1449,42 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20280"
+            foreignKeyName: "stock_moves_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20285"
+            foreignKeyName: "stock_moves_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20290"
+            foreignKeyName: "stock_moves_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20295"
+            foreignKeyName: "stock_moves_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20300"
+            foreignKeyName: "stock_moves_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20586"
+            foreignKeyName: "stock_moves_document_id_fkey"
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "documents"
@@ -1505,15 +1505,15 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           plan: string
           start_date: string
           end_date: string
-          amount[]: number
-          notes[]: string | null
-          created_by[]: string | null
-          created_at[]: string
+          amount?: number
+          notes?: string | null
+          created_by?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -1528,7 +1528,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20436"
+            foreignKeyName: "subscription_history_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1544,10 +1544,10 @@ export type Database = {
           enabled: boolean
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           module: string
-          enabled[]: boolean
+          enabled?: boolean
         }
         Update: {
           id?: string | null
@@ -1557,7 +1557,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "19870"
+            foreignKeyName: "tenant_features_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1575,12 +1575,12 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
-          pay_date[]: string
-          amount[]: number
-          notes[]: string | null
-          created_at[]: string
+          pay_date?: string
+          amount?: number
+          notes?: string | null
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -1592,7 +1592,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20643"
+            foreignKeyName: "tenant_payments_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1630,30 +1630,30 @@ export type Database = {
         }
         Insert: {
           tenant_id: string
-          cash_account_id[]: string | null
-          customers_account_id[]: string | null
-          suppliers_account_id[]: string | null
-          inventory_account_id[]: string | null
-          sales_account_id[]: string | null
-          cogs_account_id[]: string | null
-          project_cost_account_id[]: string | null
-          updated_at[]: string
-          fx_account_id[]: string | null
-          retained_earnings_account_id[]: string | null
-          salaries_account_id[]: string | null
-          advances_account_id[]: string | null
-          inventory_adjust_account_id[]: string | null
-          cost_method[]: string
-          fiscal_start[]: string | null
-          fiscal_end[]: string | null
-          period_type[]: string
-          closed_until[]: string | null
-          logo_url[]: string | null
-          primary_color[]: string | null
-          onboarding_done[]: boolean
-          auto_backup[]: boolean
-          last_backup_at[]: string | null
-          backup_every_days[]: number
+          cash_account_id?: string | null
+          customers_account_id?: string | null
+          suppliers_account_id?: string | null
+          inventory_account_id?: string | null
+          sales_account_id?: string | null
+          cogs_account_id?: string | null
+          project_cost_account_id?: string | null
+          updated_at?: string
+          fx_account_id?: string | null
+          retained_earnings_account_id?: string | null
+          salaries_account_id?: string | null
+          advances_account_id?: string | null
+          inventory_adjust_account_id?: string | null
+          cost_method?: string
+          fiscal_start?: string | null
+          fiscal_end?: string | null
+          period_type?: string
+          closed_until?: string | null
+          logo_url?: string | null
+          primary_color?: string | null
+          onboarding_done?: boolean
+          auto_backup?: boolean
+          last_backup_at?: string | null
+          backup_every_days?: number
         }
         Update: {
           tenant_id?: string | null
@@ -1684,91 +1684,91 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20452"
+            foreignKeyName: "tenant_settings_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20457"
+            foreignKeyName: "tenant_settings_cash_account_id_fkey"
             columns: ["cash_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20462"
+            foreignKeyName: "tenant_settings_customers_account_id_fkey"
             columns: ["customers_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20467"
+            foreignKeyName: "tenant_settings_suppliers_account_id_fkey"
             columns: ["suppliers_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20472"
+            foreignKeyName: "tenant_settings_inventory_account_id_fkey"
             columns: ["inventory_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20477"
+            foreignKeyName: "tenant_settings_sales_account_id_fkey"
             columns: ["sales_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20482"
+            foreignKeyName: "tenant_settings_cogs_account_id_fkey"
             columns: ["cogs_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20487"
+            foreignKeyName: "tenant_settings_project_cost_account_id_fkey"
             columns: ["project_cost_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20717"
+            foreignKeyName: "tenant_settings_fx_account_id_fkey"
             columns: ["fx_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20722"
+            foreignKeyName: "tenant_settings_retained_earnings_account_id_fkey"
             columns: ["retained_earnings_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20727"
+            foreignKeyName: "tenant_settings_salaries_account_id_fkey"
             columns: ["salaries_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20732"
+            foreignKeyName: "tenant_settings_advances_account_id_fkey"
             columns: ["advances_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20737"
+            foreignKeyName: "tenant_settings_inventory_adjust_account_id_fkey"
             columns: ["inventory_adjust_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
@@ -1793,19 +1793,19 @@ export type Database = {
           subscription_fee: number
         }
         Insert: {
-          id[]: string
+          id?: string
           name: string
-          code[]: string | null
-          phone[]: string | null
-          address[]: string | null
-          is_active[]: boolean
-          created_at[]: string
-          plan[]: string
-          sub_start[]: string
-          sub_end[]: string
-          max_users[]: number
-          notes[]: string | null
-          subscription_fee[]: number
+          code?: string | null
+          phone?: string | null
+          address?: string | null
+          is_active?: boolean
+          created_at?: string
+          plan?: string
+          sub_start?: string
+          sub_end?: string
+          max_users?: number
+          notes?: string | null
+          subscription_fee?: number
         }
         Update: {
           id?: string | null
@@ -1835,12 +1835,12 @@ export type Database = {
           created_at: string
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           name: string
-          base_unit[]: string | null
-          factor[]: number
-          created_at[]: string
+          base_unit?: string | null
+          factor?: number
+          created_at?: string
         }
         Update: {
           id?: string | null
@@ -1852,7 +1852,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20851"
+            foreignKeyName: "units_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1872,14 +1872,14 @@ export type Database = {
           can_delete: boolean
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
           user_id: string
           module: string
-          can_view[]: boolean
-          can_create[]: boolean
-          can_edit[]: boolean
-          can_delete[]: boolean
+          can_view?: boolean
+          can_create?: boolean
+          can_edit?: boolean
+          can_delete?: boolean
         }
         Update: {
           id?: string | null
@@ -1893,14 +1893,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "19905"
+            foreignKeyName: "user_permissions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "19910"
+            foreignKeyName: "user_permissions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1921,15 +1921,15 @@ export type Database = {
           is_group: boolean
         }
         Insert: {
-          id[]: string
+          id?: string
           tenant_id: string
-          code[]: string | null
+          code?: string | null
           name: string
-          location[]: string | null
-          created_at[]: string
-          is_active[]: boolean
-          parent_id[]: string | null
-          is_group[]: boolean
+          location?: string | null
+          created_at?: string
+          is_active?: boolean
+          parent_id?: string | null
+          is_group?: boolean
         }
         Update: {
           id?: string | null
@@ -1944,14 +1944,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "20207"
+            foreignKeyName: "warehouses_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "20873"
+            foreignKeyName: "warehouses_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
