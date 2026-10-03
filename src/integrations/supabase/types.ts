@@ -1108,6 +1108,7 @@ export type Database = {
           is_tenant_admin: boolean
           is_auditor: boolean
           notif_seen_at: string
+          account_kind: Database['public']['Enums']['account_kind']
         }
         Insert: {
           id: string
@@ -1120,6 +1121,7 @@ export type Database = {
           is_tenant_admin?: boolean
           is_auditor?: boolean
           notif_seen_at?: string
+          account_kind?: Database['public']['Enums']['account_kind']
         }
         Update: {
           id?: string | null
@@ -1132,6 +1134,7 @@ export type Database = {
           is_tenant_admin?: boolean | null
           is_auditor?: boolean | null
           notif_seen_at?: string | null
+          account_kind?: Database['public']['Enums']['account_kind'] | null
         }
         Relationships: [
           {
@@ -2087,6 +2090,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_kind: "standard" | "sales_cashier" | "purchase_cashier" | "warehouse_keeper"
       account_nature: "closing" | "balance_sheet" | "profit_loss"
       currency_code: "USD" | "SYP"
       perm_action: "view" | "create" | "edit" | "delete"
