@@ -5,13 +5,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
 
-function renderAt(path: string) {
+async function renderAt(path: string) {
   const queryClient = new QueryClient();
   const router = createRouter({
     routeTree,
     context: { queryClient },
     history: createMemoryHistory({ initialEntries: [path] }),
   });
+  // RouterProvider paints nothing until the router load resolves; in jsdom the
+  // implicit effect-driven load never settles, so load explicitly.
+  await router.load();
   // The root shell renders a full <html> document, which jsdom only accepts
   // when mounted into the document body itself.
   return render(<RouterProvider router={router} />, {
