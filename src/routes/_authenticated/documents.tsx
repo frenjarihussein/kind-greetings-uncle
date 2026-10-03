@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Trash2, CheckCircle2, RotateCcw, Pencil, Printer } from "lucide-react";
 import { AttachmentsButton } from "@/components/AttachmentsButton";
@@ -28,6 +29,7 @@ import {
 export const Route = createFileRoute("/_authenticated/documents")({ component: DocumentsPage });
 
 const DOC_TYPES = [
+  { value: "quote", label: "عرض سعر", lines: true, partner: true, warehouse: false },
   { value: "sale", label: "فاتورة مبيع", lines: true, partner: true, warehouse: true },
   { value: "purchase", label: "فاتورة شراء", lines: true, partner: true, warehouse: true },
   { value: "receipt", label: "سند قبض", lines: false, partner: true, warehouse: false },
@@ -52,6 +54,8 @@ const emptyDoc = {
   account_id: "",
   amount: "0",
   notes: "",
+  valid_until: "",
+  terms: "",
 };
 
 function DocumentsPage() {
@@ -122,6 +126,8 @@ function DocumentsPage() {
         account_id: form.account_id || null,
         amount: meta.lines ? 0 : Number(form.amount) || 0,
         notes: form.notes || null,
+        valid_until: form.doc_type === "quote" ? form.valid_until || null : null,
+        terms: form.doc_type === "quote" ? form.terms || null : null,
       };
       let docId: string;
       if (editing) {
@@ -161,7 +167,7 @@ function DocumentsPage() {
       }
     },
     onSuccess: () => {
-      toast.success(editing ? "تم حفظ التعديلات" : "تم حفظ المستند كمسودة");
+      toast.success(editing ? "تم حفظ التعديلات" : form.doc_type === "quote" ? "تم حفظ عرض السعر" : "تم حفظ المستند كمسودة");
       setEditing(null);
       setOpen(false);
       setForm(emptyDoc);
@@ -190,6 +196,31 @@ function DocumentsPage() {
     },
     onSuccess: () => {
       toast.success("تم إلغاء الترحيل");
+      qc.invalidateQueries({ queryKey: ["documents"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const convert = useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mutationFn: async (d: any) => {
+      const ls = await loadLines(d.id);
+      if (!ls.length) throw new Error("عرض السعر لا يحوي بنوداً");
+      const wh = d.warehouse_id || ref.data?.warehouses?.[0]?.id || null;
+      const { data: inv, error } = await db.from("documents").insert({
+        tenant_id: me!.tenantId, doc_type: "sale", doc_date: today(), currency: d.currency, exchange_rate: d.exchange_rate,
+        partner_id: d.partner_id, warehouse_id: wh, amount: 0, notes: `من عرض السعر رقم ${d.doc_no}${d.notes ? " — " + d.notes : ""}`,
+      }).select().single();
+      if (error) throw error;
+      const { error: lErr } = await db.from("document_lines").insert(
+        ls.map((l) => ({ tenant_id: me!.tenantId, document_id: inv.id, product_id: l.product_id, qty: l.qty, unit_price: l.unit_price })),
+      );
+      if (lErr) throw lErr;
+      await db.from("documents").update({ converted_document_id: inv.id }).eq("id", d.id);
+      return inv;
+    },
+    onSuccess: (inv) => {
+      toast.success(`تم إنشاء فاتورة مبيع رقم ${inv.doc_no} كمسودة — راجعها ثم رحّلها`);
       qc.invalidateQueries({ queryKey: ["documents"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -231,6 +262,8 @@ function DocumentsPage() {
         account_id: d.account_id ?? "",
         amount: String(d.amount ?? 0),
         notes: d.notes ?? "",
+        valid_until: d.valid_until ?? "",
+        terms: d.terms ?? "",
       });
       setLines(
         ls.length
@@ -259,7 +292,9 @@ function DocumentsPage() {
       if (d.warehouse_id) meta.push(["المستودع", nameOf(ref.data?.warehouses, d.warehouse_id)]);
       if (d.to_warehouse_id) meta.push(["مستودع الوجهة", nameOf(ref.data?.warehouses, d.to_warehouse_id)]);
       if (d.project_id) meta.push(["المشروع", nameOf(ref.data?.projects, d.project_id)]);
-      meta.push(["الحالة", d.status === "posted" ? "مرحّل" : "مسودة"]);
+      if (d.doc_type === "quote") {
+        if (d.valid_until) meta.push(["صالح حتى", fmtDate(d.valid_until)]);
+      } else meta.push(["الحالة", d.status === "posted" ? "مرحّل" : "مسودة"]);
       const hasLines = t?.lines;
       const ls = hasLines ? await loadLines(d.id) : [];
       const sum = ls.reduce((s, l) => s + Number(l.qty) * Number(l.unit_price), 0);
@@ -273,7 +308,7 @@ function DocumentsPage() {
           ? ls.map((l, i) => [i + 1, l.products?.name ?? "", l.products?.unit ?? "", fmtNum(l.qty), fmtNum(l.unit_price), fmtNum(Number(l.qty) * Number(l.unit_price))])
           : [[d.notes || t?.label || "", fmtNum(d.amount)]],
         footer: [["الإجمالي", `${fmtNum(hasLines ? sum : d.amount)} ${d.currency ?? ""}`]],
-        notes: hasLines ? d.notes : null,
+        notes: hasLines ? [d.notes, d.terms ? "الشروط والأحكام:\n" + d.terms : null].filter(Boolean).join("\n\n") || null : null,
       });
     } catch (e) {
       toast.error((e as Error).message);
@@ -382,7 +417,7 @@ function DocumentsPage() {
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${d.status === "posted" ? "bg-status-posted text-status-posted-foreground" : "bg-status-draft text-status-draft-foreground"}`}
                   >
-                    {d.status === "posted" ? "مرحّل" : "مسودة"}
+                    {d.doc_type === "quote" ? (d.converted_document_id ? "محوّل لفاتورة" : d.valid_until && d.valid_until < today() ? "منتهي" : "عرض سعر") : d.status === "posted" ? "مرحّل" : "مسودة"}
                   </span>
                 </td>
                 <td className="px-3 py-2">
@@ -402,6 +437,17 @@ function DocumentsPage() {
                     </Button>
                     {d.status === "draft" ? (
                       <>
+                        {d.doc_type === "quote" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={!can(me, "documents", "create") || !!d.converted_document_id || convert.isPending}
+                            onClick={() => convert.mutate(d)}
+                          >
+                            <CheckCircle2 className="size-4" />
+                            {d.converted_document_id ? "حُوّل لفاتورة" : "تحويل لفاتورة"}
+                          </Button>
+                        ) : (
                         <Button
                           size="sm"
                           variant="outline"
@@ -411,6 +457,7 @@ function DocumentsPage() {
                           <CheckCircle2 className="size-4" />
                           ترحيل
                         </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"
@@ -534,6 +581,18 @@ function DocumentsPage() {
                 </select>
                 <QuickAdd kind="warehouse" onCreated={(id) => setForm((f) => ({ ...f, warehouse_id: id }))} />
               </div>
+            )}
+            {form.doc_type === "quote" && (
+              <>
+                <div className="space-y-1">
+                  <Label>صالح حتى</Label>
+                  <Input type="date" value={form.valid_until} onChange={(e) => setForm({ ...form, valid_until: e.target.value })} />
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <Label>الشروط والأحكام (الدفع، التسليم، الضمان...)</Label>
+                  <Textarea rows={3} value={form.terms} onChange={(e) => setForm({ ...form, terms: e.target.value })} />
+                </div>
+              </>
             )}
             {form.doc_type === "transfer" && (
               <div className="space-y-1">
@@ -690,7 +749,7 @@ function DocumentsPage() {
                               ...l,
                               product_id: e.target.value,
                               unit_price:
-                                form.doc_type === "sale"
+                                form.doc_type === "sale" || form.doc_type === "quote"
                                   ? String(Number(p?.sale_price) || (p?.last_purchase_price ?? 0))
                                   : form.doc_type === "purchase"
                                     ? String(p?.avg_cost ?? 0)

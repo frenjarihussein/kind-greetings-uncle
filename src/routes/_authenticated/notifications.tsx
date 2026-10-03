@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/notifications")({
 function NotificationsPage() {
   const { data: me } = useMe();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ title: "", body: "", tenant_id: "" });
+  const [form, setForm] = useState({ title: "", body: "", tenant_id: "", link: "" });
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const tenants = useQuery({
@@ -39,13 +39,14 @@ function NotificationsPage() {
         title: form.title,
         body: form.body || null,
         tenant_id: form.tenant_id || null,
+        link: form.link || null,
         created_by: me!.userId,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("تم إرسال الإشعار");
-      setForm({ title: "", body: "", tenant_id: "" });
+      setForm({ title: "", body: "", tenant_id: "", link: "" });
       qc.invalidateQueries({ queryKey: ["notifications_admin"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
     },
@@ -79,6 +80,18 @@ function NotificationsPage() {
         <div className="space-y-1">
           <Label>النص</Label>
           <Textarea rows={4} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label>عند الضغط على الإشعار يفتح (اختياري)</Label>
+          <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })}>
+            <option value="">لا شيء</option>
+            <option value="/dashboard">لوحة المؤشرات</option>
+            <option value="/documents">المستندات والفواتير</option>
+            <option value="/pos">نقطة البيع</option>
+            <option value="/products">المواد</option>
+            <option value="/reports">التقارير</option>
+            <option value="/settings">الإعدادات</option>
+          </select>
         </div>
         <Button disabled={!form.title.trim() || send.isPending} onClick={() => send.mutate()}>إرسال الإشعار</Button>
       </div>
