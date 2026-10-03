@@ -1,12 +1,12 @@
-# Kind Greetings, Uncle
+# Spark Joy
 
-كيف الحال يا خالي
+0
 
 This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/6d8daa1f-c900-45cf-97a0-9eb07785b705).
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/92b0c09a-1245-4e08-907e-27f74edf4443).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
