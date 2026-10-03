@@ -417,6 +417,7 @@ export type Database = {
         Row: {
           account_id: string | null
           amount: number
+          converted_document_id: string | null
           created_at: string
           created_by: string | null
           currency: Database["public"]["Enums"]["currency_code"]
@@ -432,12 +433,15 @@ export type Database = {
           settles_document_id: string | null
           status: string
           tenant_id: string
+          terms: string | null
           to_warehouse_id: string | null
+          valid_until: string | null
           warehouse_id: string | null
         }
         Insert: {
           account_id?: string | null
           amount?: number
+          converted_document_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: Database["public"]["Enums"]["currency_code"]
@@ -453,12 +457,15 @@ export type Database = {
           settles_document_id?: string | null
           status?: string
           tenant_id: string
+          terms?: string | null
           to_warehouse_id?: string | null
+          valid_until?: string | null
           warehouse_id?: string | null
         }
         Update: {
           account_id?: string | null
           amount?: number
+          converted_document_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: Database["public"]["Enums"]["currency_code"]
@@ -474,7 +481,9 @@ export type Database = {
           settles_document_id?: string | null
           status?: string
           tenant_id?: string
+          terms?: string | null
           to_warehouse_id?: string | null
+          valid_until?: string | null
           warehouse_id?: string | null
         }
         Relationships: [
@@ -483,6 +492,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_converted_document_id_fkey"
+            columns: ["converted_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
           {
@@ -873,12 +889,40 @@ export type Database = {
           },
         ]
       }
+      notification_reads: {
+        Row: {
+          notification_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          notification_id: string
+          read_at?: string
+          user_id?: string
+        }
+        Update: {
+          notification_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_reads_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
           created_at: string
           created_by: string | null
           id: string
+          kind: string
+          link: string | null
           tenant_id: string | null
           title: string
         }
@@ -887,6 +931,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          kind?: string
+          link?: string | null
           tenant_id?: string | null
           title: string
         }
@@ -895,6 +941,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          kind?: string
+          link?: string | null
           tenant_id?: string | null
           title?: string
         }
