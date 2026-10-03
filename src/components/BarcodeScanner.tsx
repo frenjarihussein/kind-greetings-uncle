@@ -14,6 +14,8 @@ export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState("");
   const busy = useRef(false);
+  const onScanRef = useRef(onScan);
+  onScanRef.current = onScan;
 
   useEffect(() => {
     if (!open) return;
@@ -27,6 +29,7 @@ export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
         if (cancelled) return;
         scanner = new Html5Qrcode(REGION_ID, {
           verbose: false,
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
           formatsToSupport: [
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.EAN_8,
@@ -39,11 +42,15 @@ export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
         });
         await scanner.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 260, height: 160 } },
+          {
+            fps: 15,
+            qrbox: (w: number, h: number) => ({ width: Math.floor(w * 0.9), height: Math.floor(h * 0.6) }),
+            videoConstraints: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+          } as never,
           (text: string) => {
             if (busy.current) return;
             busy.current = true;
-            onScan(text);
+            onScanRef.current(text.trim());
             setOpen(false);
           },
           () => {},
@@ -60,7 +67,7 @@ export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
         scanner.stop().catch(() => {}).then(() => scanner.clear().catch(() => {}));
       }
     };
-  }, [open, onScan]);
+  }, [open]);
 
   return (
     <>
