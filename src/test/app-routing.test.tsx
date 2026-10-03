@@ -12,11 +12,17 @@ function renderAt(path: string) {
     context: { queryClient },
     history: createMemoryHistory({ initialEntries: [path] }),
   });
-  return render(<RouterProvider router={router} />);
+  // The root shell renders a full <html> document, which jsdom only accepts
+  // when mounted into the document body itself.
+  return render(<RouterProvider router={router} />, {
+    container: document.body,
+    baseElement: document.body,
+  });
 }
 
 afterEach(() => {
   cleanup();
+  document.body.innerHTML = "";
   vi.restoreAllMocks();
 });
 
@@ -24,16 +30,16 @@ afterEach(() => {
 // routes are rewritten as the app is built and this must keep passing.
 describe("App routing", () => {
   it("renders the index route", async () => {
-    const { container } = renderAt("/");
+    renderAt("/");
 
-    await waitFor(() => expect(container.firstChild).not.toBeNull());
+    await waitFor(() => expect(document.body.querySelector("h1")).not.toBeNull());
   });
 
   it("renders the not-found route", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
-    const { container } = renderAt("/this-route-does-not-exist");
+    renderAt("/this-route-does-not-exist");
 
-    await waitFor(() => expect(container.firstChild).not.toBeNull());
+    await waitFor(() => expect(document.body.querySelector("h1")).not.toBeNull());
   });
 });
